@@ -10,7 +10,7 @@ import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import { useWindowDimensions } from "react-native";
 import { Provider } from "react-redux";
-import { store } from "../redux/store";
+import { store } from "../store/store";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -43,7 +43,52 @@ export default function RootLayout() {
             overlayColor:
               drawerType === "front" ? "rgba(0,0,0,0.3)" : "transparent",
           }}
-        />
+        >
+          <Drawer.Screen name="index" options={{ headerShown: false }} />
+          <Drawer.Screen
+            name="dashboard"
+            options={{ headerShown: false, title: "Dashboard" }}
+          />
+          <Drawer.Screen
+            name="yard-sheet"
+            options={{ headerShown: false, title: "Yard Sheet" }}
+          />
+          <Drawer.Screen
+            name="cattle"
+            options={{ headerShown: false, title: "Cattle" }}
+          />
+          <Drawer.Screen
+            name="feeding"
+            options={{ headerShown: false, title: "Feeding" }}
+          />
+          <Drawer.Screen
+            name="animal-health"
+            options={{ headerShown: false, title: "Animal Health" }}
+          />
+          <Drawer.Screen
+            name="chute"
+            options={{ headerShown: false, title: "Chute" }}
+          />
+          <Drawer.Screen
+            name="supplies"
+            options={{ headerShown: false, title: "Supplies" }}
+          />
+          <Drawer.Screen
+            name="reports"
+            options={{ headerShown: false, title: "Reports" }}
+          />
+          <Drawer.Screen
+            name="administration/billing-accounts"
+            options={{
+              title: "ADMINISTRATION",
+              drawerLabel: "ADMINISTRATION",
+            }}
+          />
+          <Drawer.Screen
+            name="settings"
+            options={{ title: "Settings", headerShown: false }}
+          />
+        </Drawer>
         <StatusBar style="auto" />
       </ThemeProvider>
     </Provider>

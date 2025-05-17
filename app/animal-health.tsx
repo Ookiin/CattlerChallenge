@@ -1,9 +1,5 @@
-import { Text, View } from "react-native";
+import NotAvailable from "@/components/NotAvailable";
 
 export default function AnimalHealth() {
-  return (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      <Text>Sección no disponible</Text>
-    </View>
-  );
+  return <NotAvailable />;
 }

@@ -1,9 +1,6 @@
-import { Text, View } from "react-native";
+import React from "react";
+import NotAvailable from "../components/NotAvailable";
 
 export default function YardSheet() {
-  return (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      <Text>Sección no disponible</Text>
-    </View>
-  );
+  return <NotAvailable />;
 }

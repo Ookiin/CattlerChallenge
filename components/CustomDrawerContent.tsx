@@ -22,7 +22,7 @@ const screens = [
   {
     label: "Administration",
     icon: "settings-outline",
-    screen: "administration/billing",
+    screen: "administration",
   },
   { label: "Settings", icon: "cog-outline", screen: "settings" },
 ];
