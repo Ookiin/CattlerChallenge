@@ -22,7 +22,7 @@ const screens = [
   {
     label: "Administration",
     icon: "settings-outline",
-    screen: "administration",
+    screen: "administration/billing",
   },
   { label: "Settings", icon: "cog-outline", screen: "settings" },
 ];
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   drawerItemBase: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 10,
+    paddingVertical: 5,
     paddingHorizontal: 8,
     borderRadius: 8,
     marginHorizontal: 4,
