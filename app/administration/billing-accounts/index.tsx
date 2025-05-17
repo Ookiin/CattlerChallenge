@@ -1,5 +1,6 @@
+import { format } from "date-fns";
 import { Link } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -8,27 +9,51 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useSelector } from "react-redux";
-import { RootState } from "../../../store/store";
-
-interface Movement {
-  concept: string;
-  date: string;
-  amount: number;
-  status: "paid" | "pending";
-}
+import DateTimePickerModal from "react-native-modal-datetime-picker";
+import { useDispatch, useSelector } from "react-redux";
+import { loadMovements } from "../../../store/billingSlice";
+import { AppDispatch, RootState } from "../../../store/store";
 
 function BillingScreen() {
-  const movements = useSelector((state: RootState) => state.billing.movements);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "paid" | "partially_paid" | "due" | "overdue"
+  >("all");
+  const [fromDate, setFromDate] = useState(new Date());
+  const [toDate, setToDate] = useState(new Date());
+  const [isFromPickerVisible, setFromPickerVisible] = useState(false);
+  const [isToPickerVisible, setToPickerVisible] = useState(false);
 
-  const filteredMovements = movements.filter((movement: Movement) => {
-    const matchesSearch = movement.concept
+  const movements = useSelector((state: RootState) => state.billing.movements);
+  const dispatch = useDispatch<AppDispatch>();
+
+  const showFromPicker = () => setFromPickerVisible(true);
+  const hideFromPicker = () => setFromPickerVisible(false);
+  const handleFromConfirm = (date: Date) => {
+    setFromDate(date);
+    hideFromPicker();
+  };
+
+  const showToPicker = () => setToPickerVisible(true);
+  const hideToPicker = () => setToPickerVisible(false);
+  const handleToConfirm = (date: Date) => {
+    setToDate(date);
+    hideToPicker();
+  };
+
+  useEffect(() => {
+    dispatch(loadMovements());
+  }, [dispatch]);
+
+  const filteredMovements = movements.filter((movement) => {
+    const matchesSearch = movement.bill_to.name
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
+
     const matchesStatus =
-      statusFilter === "all" || movement.status === statusFilter;
+      statusFilter === "all" ||
+      movement.current_payment_status.toLowerCase() === statusFilter;
+
     return matchesSearch && matchesStatus;
   });
 
@@ -36,14 +61,36 @@ function BillingScreen() {
     <ScrollView style={billingStyles.billingContainer}>
       <View style={billingStyles.dateFiltersContainer}>
         <Text style={billingStyles.dateFilterText}>FROM</Text>
-        <View style={billingStyles.datePickerPlaceholder}>
-          <Text>Apr 17, 2025</Text>
-        </View>
+        <TouchableOpacity
+          style={billingStyles.datePickerPlaceholder}
+          onPress={showFromPicker}
+        >
+          <Text>{format(fromDate, "MMM dd, yyyy")}</Text>
+        </TouchableOpacity>
+
         <Text style={billingStyles.dateFilterText}>TO</Text>
-        <View style={billingStyles.datePickerPlaceholder}>
-          <Text>May 17, 2025</Text>
-        </View>
+        <TouchableOpacity
+          style={billingStyles.datePickerPlaceholder}
+          onPress={showToPicker}
+        >
+          <Text>{format(toDate, "MMM dd, yyyy")}</Text>
+        </TouchableOpacity>
       </View>
+
+      <DateTimePickerModal
+        isVisible={isFromPickerVisible}
+        mode="date"
+        date={fromDate}
+        onConfirm={handleFromConfirm}
+        onCancel={hideFromPicker}
+      />
+      <DateTimePickerModal
+        isVisible={isToPickerVisible}
+        mode="date"
+        date={toDate}
+        onConfirm={handleToConfirm}
+        onCancel={hideToPicker}
+      />
 
       <Text style={billingStyles.sectionTitle}>BALANCE</Text>
 
@@ -88,55 +135,27 @@ function BillingScreen() {
       <View style={billingStyles.filtersContainer}>
         <View style={billingStyles.statusFilterContainer}>
           <Text style={billingStyles.filterLabel}>STATUS</Text>
-          <TouchableOpacity
-            style={[
-              billingStyles.statusButton,
-              statusFilter === "all" && billingStyles.activeStatusButton,
-            ]}
-            onPress={() => setStatusFilter("all")}
-          >
-            <Text
+
+          {["all", "paid", "partially_paid", "due", "overdue"].map((status) => (
+            <TouchableOpacity
+              key={status}
               style={[
-                billingStyles.statusButtonText,
-                statusFilter === "all" && billingStyles.activeStatusButtonText,
+                billingStyles.statusButton,
+                statusFilter === status && billingStyles.activeStatusButton,
               ]}
+              onPress={() => setStatusFilter(status as typeof statusFilter)}
             >
-              All
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              billingStyles.statusButton,
-              statusFilter === "paid" && billingStyles.activeStatusButton,
-            ]}
-            onPress={() => setStatusFilter("paid")}
-          >
-            <Text
-              style={[
-                billingStyles.statusButtonText,
-                statusFilter === "paid" && billingStyles.activeStatusButtonText,
-              ]}
-            >
-              Paid
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              billingStyles.statusButton,
-              statusFilter === "pending" && billingStyles.activeStatusButton,
-            ]}
-            onPress={() => setStatusFilter("pending")}
-          >
-            <Text
-              style={[
-                billingStyles.statusButtonText,
-                statusFilter === "pending" &&
-                  billingStyles.activeStatusButtonText,
-              ]}
-            >
-              Pending
-            </Text>
-          </TouchableOpacity>
+              <Text
+                style={[
+                  billingStyles.statusButtonText,
+                  statusFilter === status &&
+                    billingStyles.activeStatusButtonText,
+                ]}
+              >
+                {status.replace("_", " ").toUpperCase()}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
         <View style={billingStyles.searchContainer}>
           <TextInput
@@ -172,21 +191,25 @@ function BillingScreen() {
               {movement.date}
             </Text>
             <Text style={[billingStyles.itemText, { flex: 2 }]}>
-              Cattler Corp
-            </Text>
-            <Text style={[billingStyles.itemText, { flex: 1 }]}>543</Text>
-            <Text style={[billingStyles.itemText, { flex: 1.5 }]}>
-              ${movement.amount.toFixed(2)}
-            </Text>
-            <Text style={[billingStyles.itemText, { flex: 1.5 }]}>
-              2025-05-22
+              {movement.bill_to.name}
             </Text>
             <Text style={[billingStyles.itemText, { flex: 1 }]}>
-              {movement.status.toUpperCase()}
+              {movement.number}
             </Text>
-            <Text style={[billingStyles.itemText, { flex: 1 }]}>$0</Text>
             <Text style={[billingStyles.itemText, { flex: 1.5 }]}>
-              ${movement.amount.toFixed(2)}
+              ${movement.total_amount_owner.toFixed(2)}
+            </Text>
+            <Text style={[billingStyles.itemText, { flex: 1.5 }]}>
+              {movement.due_date}
+            </Text>
+            <Text style={[billingStyles.itemText, { flex: 1 }]}>
+              {movement.current_payment_status.toUpperCase()}
+            </Text>
+            <Text style={[billingStyles.itemText, { flex: 1 }]}>
+              ${movement.paid.toFixed(2)}
+            </Text>
+            <Text style={[billingStyles.itemText, { flex: 1.5 }]}>
+              ${movement.balance.toFixed(2)}
             </Text>
           </View>
         ))}
@@ -280,6 +303,7 @@ const billingStyles = StyleSheet.create({
   billingContainer: {
     flex: 1,
     padding: 16,
+    marginBottom: 20,
     backgroundColor: "#f5f5f5",
   },
   dateFiltersContainer: {

@@ -1,58 +1,68 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-interface Movement {
-  concept: string;
+interface BillTo {
+  id: number;
+  name: string;
+}
+
+export interface Movement {
+  id: number;
+  number: number;
+  total_amount_owner: number;
+  due_date: string;
+  bill_to: BillTo;
+  current_payment_status: string;
+  paid: number;
+  balance: number;
   date: string;
-  amount: number;
-  status: "paid" | "pending";
 }
 
 interface BillingState {
   movements: Movement[];
+  loading: boolean;
+  error: string | null;
 }
 
 const initialState: BillingState = {
-  movements: [
-    {
-      concept: "Account Payment",
-      date: "2024-03-15",
-      amount: 5000,
-      status: "paid",
-    },
-    {
-      concept: "Service Fee",
-      date: "2024-03-14",
-      amount: 3000,
-      status: "pending",
-    },
-    {
-      concept: "Monthly Subscription",
-      date: "2024-03-13",
-      amount: 2000,
-      status: "paid",
-    },
-  ],
+  movements: [],
+  loading: false,
+  error: null,
 };
+
+export const loadMovements = createAsyncThunk(
+  "billing/loadMovements",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await import("../utils/getSimulationJson.json");
+      return response.default as Movement[];
+    } catch (error: any) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
 
 const billingSlice = createSlice({
   name: "billing",
   initialState,
-  reducers: {
-    addMovement: (state, action: PayloadAction<Movement>) => {
-      state.movements.push(action.payload);
-    },
-    updateMovement: (
-      state,
-      action: PayloadAction<{ index: number; movement: Movement }>
-    ) => {
-      state.movements[action.payload.index] = action.payload.movement;
-    },
-    deleteMovement: (state, action: PayloadAction<number>) => {
-      state.movements.splice(action.payload, 1);
-    },
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(loadMovements.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(
+        loadMovements.fulfilled,
+        (state, action: PayloadAction<Movement[]>) => {
+          state.loading = false;
+          state.movements = action.payload;
+        }
+      )
+      .addCase(loadMovements.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
   },
 });
 
-export const { addMovement, updateMovement, deleteMovement } =
-  billingSlice.actions;
 export default billingSlice.reducer;

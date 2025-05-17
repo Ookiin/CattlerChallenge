@@ -77,19 +77,13 @@ export default function RootLayout() {
             name="reports"
             options={{ headerShown: false, title: "Reports" }}
           />
-          <Drawer.Screen
-            name="administration/billing-accounts"
-            options={{
-              title: "ADMINISTRATION",
-              drawerLabel: "ADMINISTRATION",
-            }}
-          />
+
           <Drawer.Screen
             name="settings"
             options={{ title: "Settings", headerShown: false }}
           />
         </Drawer>
-        <StatusBar style="auto" />
+        <StatusBar hidden={true} />
       </ThemeProvider>
     </Provider>
   );
