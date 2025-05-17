@@ -19,14 +19,12 @@ export default function RootLayout() {
   const drawerWidth = expanded ? 240 : 72;
   const drawerType = isTablet ? "permanent" : "front";
 
-  // Detectar si el dispositivo es un teléfono pequeño y está en landscape
   const isPhone = width < 768;
   const isLandscape = width > height;
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <View style={styles.container}>
-        {/* Si es teléfono en landscape, rotar el contenido para simular portrait */}
         <View
           style={[
             styles.innerContainer,
@@ -69,7 +67,6 @@ const styles = StyleSheet.create({
   rotateContent: {
     flex: 1,
     transform: [{ rotate: "90deg" }],
-    // Ajustamos para que quepa en pantalla luego de rotar:
     width: "100%",
     height: "100%",
   },
