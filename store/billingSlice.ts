@@ -44,7 +44,24 @@ export const loadMovements = createAsyncThunk(
 const billingSlice = createSlice({
   name: "billing",
   initialState,
-  reducers: {},
+  reducers: {
+    addPayment: (state, action: PayloadAction<Omit<Movement, "id">>) => {
+      const newId =
+        state.movements.length > 0
+          ? Math.max(...state.movements.map((m) => m.id)) + 1
+          : 1;
+
+      const newMovement: Movement = {
+        ...action.payload,
+        id: newId,
+        number: newId,
+        current_payment_status: "paid",
+        balance: 0,
+      };
+
+      state.movements.push(newMovement);
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(loadMovements.pending, (state) => {
@@ -55,7 +72,9 @@ const billingSlice = createSlice({
         loadMovements.fulfilled,
         (state, action: PayloadAction<Movement[]>) => {
           state.loading = false;
-          state.movements = action.payload;
+          if (state.movements.length === 0) {
+            state.movements = action.payload;
+          }
         }
       )
       .addCase(loadMovements.rejected, (state, action) => {
@@ -65,4 +84,5 @@ const billingSlice = createSlice({
   },
 });
 
+export const { addPayment } = billingSlice.actions;
 export default billingSlice.reducer;

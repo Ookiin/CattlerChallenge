@@ -77,7 +77,6 @@ export default function RootLayout() {
             name="reports"
             options={{ headerShown: false, title: "Reports" }}
           />
-
           <Drawer.Screen
             name="settings"
             options={{ title: "Settings", headerShown: false }}

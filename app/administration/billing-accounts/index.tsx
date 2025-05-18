@@ -1,5 +1,7 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+import { DrawerParamList } from "@/types/navigation";
+import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { format } from "date-fns";
-import { Link } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ScrollView,
@@ -19,6 +21,7 @@ function BillingScreen() {
   const [statusFilter, setStatusFilter] = useState<
     "all" | "paid" | "partially_paid" | "due" | "overdue"
   >("all");
+
   const [fromDate, setFromDate] = useState(new Date());
   const [toDate, setToDate] = useState(new Date());
   const [isFromPickerVisible, setFromPickerVisible] = useState(false);
@@ -26,6 +29,47 @@ function BillingScreen() {
 
   const movements = useSelector((state: RootState) => state.billing.movements);
   const dispatch = useDispatch<AppDispatch>();
+
+  const summary = movements.reduce(
+    (acc, m) => {
+      const status = m.current_payment_status.toLowerCase();
+
+      acc.totalBilling += m.total_amount_owner;
+      acc.totalInvoices += 1;
+
+      if (status === "paid") {
+        acc.paidAmount += m.total_amount_owner;
+        acc.paidCount += 1;
+      } else if (status === "partial" || status === "partially_paid") {
+        acc.partialAmount += m.paid;
+        acc.partialCount += 1;
+      } else if (status === "due") {
+        acc.dueAmount += m.balance;
+        acc.dueCount += 1;
+      } else if (status === "overdue") {
+        acc.overdueAmount += m.balance;
+        acc.overdueCount += 1;
+      }
+
+      return acc;
+    },
+    {
+      totalBilling: 0,
+      totalInvoices: 0,
+      paidAmount: 0,
+      paidCount: 0,
+      partialAmount: 0,
+      partialCount: 0,
+      dueAmount: 0,
+      dueCount: 0,
+      overdueAmount: 0,
+      overdueCount: 0,
+    }
+  );
+
+  useEffect(() => {
+    dispatch(loadMovements());
+  }, []);
 
   const showFromPicker = () => setFromPickerVisible(true);
   const hideFromPicker = () => setFromPickerVisible(false);
@@ -41,18 +85,23 @@ function BillingScreen() {
     hideToPicker();
   };
 
-  useEffect(() => {
-    dispatch(loadMovements());
-  }, [dispatch]);
+  const normalizeStatus = (status: string): string => {
+    switch (status.toLowerCase()) {
+      case "partial":
+        return "partially_paid";
+      default:
+        return status.toLowerCase();
+    }
+  };
 
   const filteredMovements = movements.filter((movement) => {
     const matchesSearch = movement.bill_to.name
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
 
+    const movementStatus = normalizeStatus(movement.current_payment_status);
     const matchesStatus =
-      statusFilter === "all" ||
-      movement.current_payment_status.toLowerCase() === statusFilter;
+      statusFilter === "all" || movementStatus === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
@@ -102,30 +151,50 @@ function BillingScreen() {
         <View style={billingStyles.summaryContainer}>
           <View style={billingStyles.summaryCard}>
             <Text style={billingStyles.summaryTitle}>Total billing</Text>
-            <Text style={billingStyles.summaryAmount}>$252,263,632.6</Text>
-            <Text style={billingStyles.summaryInvoices}>11 invoices</Text>
+            <Text style={billingStyles.summaryAmount}>
+              ${summary.totalBilling.toFixed(2)}
+            </Text>
+            <Text style={billingStyles.summaryInvoices}>
+              {summary.totalInvoices} invoices
+            </Text>
           </View>
           <View style={[billingStyles.summaryCard, billingStyles.paidCard]}>
             <Text style={billingStyles.summaryTitle}>Paid</Text>
-            <Text style={billingStyles.summaryAmount}>$0</Text>
-            <Text style={billingStyles.summaryInvoices}>0 invoices</Text>
+            <Text style={billingStyles.summaryAmount}>
+              ${summary.paidAmount.toFixed(2)}
+            </Text>
+            <Text style={billingStyles.summaryInvoices}>
+              {summary.paidCount} invoices
+            </Text>
           </View>
           <View
             style={[billingStyles.summaryCard, billingStyles.partiallyPaidCard]}
           >
             <Text style={billingStyles.summaryTitle}>Partially paid</Text>
-            <Text style={billingStyles.summaryAmount}>$41,280,732.83</Text>
-            <Text style={billingStyles.summaryInvoices}>1 invoices</Text>
+            <Text style={billingStyles.summaryAmount}>
+              ${summary.partialAmount.toFixed(2)}
+            </Text>
+            <Text style={billingStyles.summaryInvoices}>
+              {summary.partialCount} invoices
+            </Text>
           </View>
           <View style={[billingStyles.summaryCard, billingStyles.dueCard]}>
             <Text style={billingStyles.summaryTitle}>Due</Text>
-            <Text style={billingStyles.summaryAmount}>$4,796.22</Text>
-            <Text style={billingStyles.summaryInvoices}>3 invoices</Text>
+            <Text style={billingStyles.summaryAmount}>
+              ${summary.dueAmount.toFixed(2)}
+            </Text>
+            <Text style={billingStyles.summaryInvoices}>
+              {summary.dueCount} invoices
+            </Text>
           </View>
           <View style={[billingStyles.summaryCard, billingStyles.overdueCard]}>
             <Text style={billingStyles.summaryTitle}>Overdue</Text>
-            <Text style={billingStyles.summaryAmount}>$210,978,103.55</Text>
-            <Text style={billingStyles.summaryInvoices}>7 invoices</Text>
+            <Text style={billingStyles.summaryAmount}>
+              ${summary.overdueAmount.toFixed(2)}
+            </Text>
+            <Text style={billingStyles.summaryInvoices}>
+              {summary.overdueCount} invoices
+            </Text>
           </View>
         </View>
       </ScrollView>
@@ -526,6 +595,7 @@ const billingStyles = StyleSheet.create({
 
 export default function BillingAccountsScreen() {
   const [activeTab, setActiveTab] = useState("Billing");
+  const navigation = useNavigation<NavigationProp<DrawerParamList>>();
 
   return (
     <View style={styles.container}>
@@ -568,11 +638,12 @@ export default function BillingAccountsScreen() {
           </Text>
         </TouchableOpacity>
 
-        <Link href="/administration/billing-accounts/new-payment" asChild>
-          <TouchableOpacity style={styles.addButton}>
-            <Text style={styles.addButtonText}>+ ADD</Text>
-          </TouchableOpacity>
-        </Link>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => navigation.navigate("new-payment")}
+        >
+          <Text style={styles.addButtonText}>+ ADD</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.contentArea}>
