@@ -104,7 +104,6 @@ export default function NewPaymentModal() {
     }
   };
 
-  // Función auxiliar para convertir el nombre del mes a número
   const getMonthNumber = (month: string) => {
     const months: { [key: string]: string } = {
       Jan: "01",
