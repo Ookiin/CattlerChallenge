@@ -7,6 +7,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
@@ -27,6 +28,8 @@ export default function BillingScreen() {
 
   const movements = useSelector((state: RootState) => state.billing.movements);
   const dispatch = useDispatch<AppDispatch>();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768;
 
   const summary = movements.reduce(
     (acc, m) => {
@@ -68,6 +71,51 @@ export default function BillingScreen() {
   useEffect(() => {
     dispatch(loadMovements());
   }, []);
+
+  const MovementCard = ({ movement }: { movement: any }) => (
+    <View style={billingStyles.cardContainer}>
+      <View style={billingStyles.cardHeader}>
+        <Text style={billingStyles.cardDate}>{movement.date}</Text>
+        <Text
+          style={[
+            billingStyles.cardStatus,
+            movement.current_payment_status.toLowerCase() === "overdue" &&
+              billingStyles.overdueStatus,
+          ]}
+        >
+          {movement.current_payment_status.toUpperCase()}
+        </Text>
+      </View>
+
+      <Text style={billingStyles.cardOwner}>{movement.bill_to.name}</Text>
+
+      <View style={billingStyles.cardDetails}>
+        <View style={billingStyles.cardRow}>
+          <Text style={billingStyles.cardLabel}>Bill/inv:</Text>
+          <Text style={billingStyles.cardValue}>{movement.number}</Text>
+        </View>
+
+        <View style={billingStyles.cardRow}>
+          <Text style={billingStyles.cardLabel}>Amount:</Text>
+          <Text style={billingStyles.cardValue}>
+            ${movement.total_amount_owner.toFixed(2)}
+          </Text>
+        </View>
+
+        <View style={billingStyles.cardRow}>
+          <Text style={billingStyles.cardLabel}>Due date:</Text>
+          <Text style={billingStyles.cardValue}>{movement.due_date}</Text>
+        </View>
+
+        <View style={billingStyles.cardRow}>
+          <Text style={billingStyles.cardLabel}>Paid/Balance:</Text>
+          <Text style={billingStyles.cardValue}>
+            ${movement.paid.toFixed(2)} / ${movement.balance.toFixed(2)}
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
 
   const showFromPicker = () => setFromPickerVisible(true);
   const hideFromPicker = () => setFromPickerVisible(false);
@@ -237,50 +285,64 @@ export default function BillingScreen() {
         </View>
       </View>
 
-      <View style={billingStyles.listHeader}>
-        <Text style={[billingStyles.headerText, { flex: 1.5 }]}>DATE</Text>
-        <Text style={[billingStyles.headerText, { flex: 2 }]}>OWNER</Text>
-        <Text style={[billingStyles.headerText, { flex: 1 }]}>BILL/INV</Text>
-        <Text style={[billingStyles.headerText, { flex: 1.5 }]}>AMOUNT</Text>
-        <Text style={[billingStyles.headerText, { flex: 1.5 }]}>DUE DATE</Text>
-        <Text style={[billingStyles.headerText, { flex: 1 }]}>STATUS</Text>
-        <Text style={[billingStyles.headerText, { flex: 1 }]}>PAID</Text>
-        <Text style={[billingStyles.headerText, { flex: 1.5 }]}>BALANCE</Text>
-      </View>
+      {isTablet ? (
+        <View style={billingStyles.listHeader}>
+          <Text style={[billingStyles.headerText, { flex: 1.5 }]}>DATE</Text>
+          <Text style={[billingStyles.headerText, { flex: 2 }]}>OWNER</Text>
+          <Text style={[billingStyles.headerText, { flex: 1 }]}>BILL/INV</Text>
+          <Text style={[billingStyles.headerText, { flex: 1.5 }]}>AMOUNT</Text>
+          <Text style={[billingStyles.headerText, { flex: 1.5 }]}>
+            DUE DATE
+          </Text>
+          <Text style={[billingStyles.headerText, { flex: 1 }]}>STATUS</Text>
+          <Text style={[billingStyles.headerText, { flex: 1 }]}>PAID</Text>
+          <Text style={[billingStyles.headerText, { flex: 1.5 }]}>BALANCE</Text>
+        </View>
+      ) : null}
 
-      <ScrollView
-        style={billingStyles.movementsList}
-        nestedScrollEnabled={true}
-      >
-        {filteredMovements.map((movement, index) => (
-          <View key={index} style={billingStyles.movementItem}>
-            <Text style={[billingStyles.itemText, { flex: 1.5 }]}>
-              {movement.date}
-            </Text>
-            <Text style={[billingStyles.itemText, { flex: 2 }]}>
-              {movement.bill_to.name}
-            </Text>
-            <Text style={[billingStyles.itemText, { flex: 1 }]}>
-              {movement.number}
-            </Text>
-            <Text style={[billingStyles.itemText, { flex: 1.5 }]}>
-              ${movement.total_amount_owner.toFixed(2)}
-            </Text>
-            <Text style={[billingStyles.itemText, { flex: 1.5 }]}>
-              {movement.due_date}
-            </Text>
-            <Text style={[billingStyles.itemText, { flex: 1 }]}>
-              {movement.current_payment_status.toUpperCase()}
-            </Text>
-            <Text style={[billingStyles.itemText, { flex: 1 }]}>
-              ${movement.paid.toFixed(2)}
-            </Text>
-            <Text style={[billingStyles.itemText, { flex: 1.5 }]}>
-              ${movement.balance.toFixed(2)}
-            </Text>
-          </View>
-        ))}
-      </ScrollView>
+      {!isTablet ? (
+        <View style={billingStyles.cardsContainer}>
+          {filteredMovements.map((movement, index) => (
+            <MovementCard key={index} movement={movement} />
+          ))}
+        </View>
+      ) : (
+        <>
+          <ScrollView
+            style={billingStyles.movementsList}
+            nestedScrollEnabled={true}
+          >
+            {filteredMovements.map((movement, index) => (
+              <View key={index} style={billingStyles.movementItem}>
+                <Text style={[billingStyles.itemText, { flex: 1.5 }]}>
+                  {movement.date}
+                </Text>
+                <Text style={[billingStyles.itemText, { flex: 2 }]}>
+                  {movement.bill_to.name}
+                </Text>
+                <Text style={[billingStyles.itemText, { flex: 1 }]}>
+                  {movement.number}
+                </Text>
+                <Text style={[billingStyles.itemText, { flex: 1.5 }]}>
+                  ${movement.total_amount_owner.toFixed(2)}
+                </Text>
+                <Text style={[billingStyles.itemText, { flex: 1.5 }]}>
+                  {movement.due_date}
+                </Text>
+                <Text style={[billingStyles.itemText, { flex: 1 }]}>
+                  {movement.current_payment_status.toUpperCase()}
+                </Text>
+                <Text style={[billingStyles.itemText, { flex: 1 }]}>
+                  ${movement.paid.toFixed(2)}
+                </Text>
+                <Text style={[billingStyles.itemText, { flex: 1.5 }]}>
+                  ${movement.balance.toFixed(2)}
+                </Text>
+              </View>
+            ))}
+          </ScrollView>
+        </>
+      )}
     </ScrollView>
   );
 }
@@ -458,5 +520,68 @@ const billingStyles = StyleSheet.create({
     fontSize: 12,
     color: "#333",
     textAlign: "center",
+  },
+  cardsContainer: {
+    marginBottom: 20,
+    gap: 12,
+  },
+  cardContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    padding: 15,
+    marginBottom: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  cardDate: {
+    fontSize: 12,
+    color: "#666",
+    fontFamily: "System",
+  },
+  cardStatus: {
+    fontSize: 12,
+    fontWeight: "600",
+    fontFamily: "System",
+    color: "#333",
+  },
+  overdueStatus: {
+    color: "#d9534f",
+  },
+  cardOwner: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 12,
+    fontFamily: "System",
+  },
+  cardDetails: {
+    gap: 6,
+  },
+  cardRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  cardLabel: {
+    fontSize: 12,
+    color: "#666",
+    flex: 1,
+    fontFamily: "System",
+  },
+  cardValue: {
+    fontSize: 12,
+    color: "#333",
+    fontWeight: "500",
+    flex: 1,
+    textAlign: "right",
+    fontFamily: "System",
   },
 });
