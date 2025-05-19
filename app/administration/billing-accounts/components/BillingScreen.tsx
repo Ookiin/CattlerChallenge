@@ -247,43 +247,51 @@ export default function BillingScreen() {
 
       <Text style={billingStyles.sectionTitle}>MOVEMENTS</Text>
 
-      <View style={billingStyles.filtersContainer}>
-        <View style={billingStyles.statusFilterContainer}>
-          <Text style={billingStyles.filterLabel}>STATUS</Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={billingStyles.summaryScrollContainer}
+      >
+        <View style={billingStyles.filtersContainer}>
+          <View style={billingStyles.statusFilterContainer}>
+            <Text style={billingStyles.filterLabel}>STATUS</Text>
 
-          {["all", "paid", "partially_paid", "due", "overdue"].map((status) => (
-            <TouchableOpacity
-              key={status}
-              style={[
-                billingStyles.statusButton,
-                statusFilter === status && billingStyles.activeStatusButton,
-              ]}
-              onPress={() => setStatusFilter(status as typeof statusFilter)}
-            >
-              <Text
-                style={[
-                  billingStyles.statusButtonText,
-                  statusFilter === status &&
-                    billingStyles.activeStatusButtonText,
-                ]}
-              >
-                {status.replace("_", " ").toUpperCase()}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-        <View style={billingStyles.searchContainer}>
-          <TextInput
-            style={billingStyles.searchInput}
-            placeholder="Search"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          <View style={billingStyles.searchIconPlaceholder}>
-            <Text>🔎</Text>
+            {["all", "paid", "partially_paid", "due", "overdue"].map(
+              (status) => (
+                <TouchableOpacity
+                  key={status}
+                  style={[
+                    billingStyles.statusButton,
+                    statusFilter === status && billingStyles.activeStatusButton,
+                  ]}
+                  onPress={() => setStatusFilter(status as typeof statusFilter)}
+                >
+                  <Text
+                    style={[
+                      billingStyles.statusButtonText,
+                      statusFilter === status &&
+                        billingStyles.activeStatusButtonText,
+                    ]}
+                  >
+                    {status.replace("_", " ").toUpperCase()}
+                  </Text>
+                </TouchableOpacity>
+              )
+            )}
+          </View>
+          <View style={billingStyles.searchContainer}>
+            <TextInput
+              style={billingStyles.searchInput}
+              placeholder="Search"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            <View style={billingStyles.searchIconPlaceholder}>
+              <Text>🔎</Text>
+            </View>
           </View>
         </View>
-      </View>
+      </ScrollView>
 
       {isTablet ? (
         <View style={billingStyles.listHeader}>
