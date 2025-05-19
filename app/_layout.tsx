@@ -81,6 +81,10 @@ export default function RootLayout() {
             name="settings"
             options={{ title: "Settings", headerShown: false }}
           />
+          <Drawer.Screen
+            name="administration"
+            options={{ headerShown: false }}
+          />
         </Drawer>
         <StatusBar hidden={true} />
       </ThemeProvider>

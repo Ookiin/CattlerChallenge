@@ -69,7 +69,7 @@ export default function NewPaymentModal() {
 
   const onSubmit = async (data: PaymentFormData) => {
     try {
-      console.log("Iniciando submit...");
+      console.log("Pago efectivo, Actualizando store-redux");
       console.log("Payment Data:", data);
 
       const dateParts = data.date.split(" ");
@@ -244,8 +244,6 @@ export default function NewPaymentModal() {
         <TouchableOpacity
           style={styles.submitButton}
           onPress={() => {
-            console.log("Botón presionado");
-            console.log("Errores:", errors);
             handleSubmit(onSubmit)();
           }}
         >
